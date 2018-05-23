@@ -4,6 +4,7 @@ author: Ana Maria Sandoval Jimenez, Jannis Busch & Sabrina Steinert
 date: May 22, 2018
 output: 
   html_document:
+    toc: true
     theme: lumen
     code_folding: hide
 ---
@@ -12,9 +13,9 @@ output:
 knitr::opts_chunk$set(echo = TRUE, fig.align = "center")
 ```
  
-## Introduction
+## 1 Introduction
 
-### The Data
+### 1.1 The Data
 
 ```{r, include=FALSE}
 # Load data
@@ -55,17 +56,18 @@ The dimensions are 546 row and 194 columns which can be explained with the follo
 In conclusion, each row in this dataframe depicts one complete DCC which has been measured in the lab. 
 The file also contains the position on the printing sheet as in row and column. Therefore every row/column combinations exists 13 times. 
 
-### The Task
+### 1.2 The Task
 The task is to make sense out of the given data sets and explore what conclusions can be drawn. The objective is to use a variety of calculations and visualization techniques to find those explanations for the given data.
 
-### The Tools
+### 1.3 The Tools
 In the process of the group work, we have been using Github and R Studio. With Github we were able to share our R scripts in an anonymized manner. R Studio has been the choice of our local working environment due to the fact that all lectures have been complemented with R Studio. Hence the environment was known to each team member. 
 
-### What We Expect
+### 1.4 What We Expect
 Upon first looks into the data, we expect to find DCCs from the lab that vary a lot from the Master DCC in color space given in L-a-b values. We will explore these differences using multiple visualization techniques that have been subject in current lectures including Data Visualization and Machine Learning.
 
+<a href="#top">Back to top</a>
 
-## Data Exploration and Findings
+## 2 Data Exploration and Findings
 
 To have a first overview of the master DCC data, a 3-dimensional scatterplot was created. The following code produces one in the L-a-b space with each spot represented in the respective color on the master DCC.
 
@@ -95,7 +97,7 @@ s3d <- scatterplot3d(master[,9:11],
               box=FALSE)
 ```
 
-###K-Means Clustering
+### 2.1 K-Means Clustering
 After an initial feeling for the master DCC, one way to visually access the lab data is to cluster each of the 546 DCC.
 
 ```{r, include=FALSE}
@@ -118,7 +120,7 @@ plot(pr.out$x[,1:2],type="n", main="546 Clustered Color Cards", ylab="PC2")
 text(pr.out$x[,1:2],col=km.out$cluster)
 ```
 
-### MDS
+### 2.2 MDS
 The main goal of MDS it is to plot multivariate data points in two dimensions, thus revealing the structure of the dataset by visualizing the relative distance of the observations.
 
 ```{r}
@@ -154,7 +156,7 @@ The MDS plot visualizes the master data points (black) values in a 2d plot and t
 One can see from this plot that there are lab result color spots that are more different than the actual master color spot l-a-b color value. Visibly different are color spots 8 with the visually greatest distance from the master color spot as well as 61 and 63.
 It makes sense to have a closer look into this difference on a detailed level (and not on the "mean over all lab results" scale) which is what we are doing in the following visualisations.
 
-### CIE76
+### 2.3 CIE76
 
 The CIE76 deltaE was used in order to obtain an easy-to-calculate color measurement; the Euclidian distance is used for determining color distance.
 
@@ -208,9 +210,33 @@ hist(deltae, #breaks = 20,
 ```
 
 The results data concerning CIE76 euclidean distance is still distinguishable to the human eye under controlled viewing conditions. The $$\Delta E_{ab}^{*}\approx 2.3$$ corresponds to the just noticeable difference (JND). The metric here varies between 0.05 units and 36.44 units.
-One can see from the histogram above that most eucledian distances are below the JND. A few euclidean distances even reach above 30 which means that the colors differ a lot between the master CDD color spot and the mean of the respective lab result color spots. 
+One can see from the histogram above that most eucledian distances are below the JND. A few euclidean distances even reach above 30 which means that the colors differ a lot between the master DCC color spot and the mean of the respective lab result color spots. 
 
-```{r image code, echo = FALSE}
+Since the JND starts at an euclidean distance of 2.3, we want to visualize the count of lab result DCC color spots that are greater than the JND:
+
+```{r}
+# Just noticeable difference starts at deltae 2.3
+# Add column to deltae data frame which counts the cells rowwise which are above the threshold
+deltae.copy <- as.data.frame(cbind(deltae))
+deltae.copy$JDNcount <- rowSums(deltae.copy[,3:66] >= 2.3)
+# Which counts are the most common among all color cards
+boxplot(deltae.copy$JDNcount, main="Count of visibly different color spots of all lab result DCC", ylab="JDN Count")
+```
+
+Interestingly, every single DCC from the lab results has at least 25 color spots that are visibly different from the master DCC color spots. The mean is at 35 and there exist at least one lab result DCC in which 50 (out of 64) color spots differ visibly from the master.
+
+We now want to compare all lab result DCC color spots side by side to see which exact color spots have the highest euclidean distance and vary the most.
+
+```{r}
+# all color spots deltaes as boxplot next to each other
+boxplot(deltae.copy[3:66], main="Euclidean distances of all lab result DCC color spots side-by-side", xlab="Row/Column position of color spot", ylab="Euclidean Distance")
+```
+
+Depicted in a 8x8 heatmap that contains all 64 color spots, one can now see which color spots exactly differ the most between master and lab results.
+
+From this comparison, we can easily see that the color spots in all 13 printing sheets at position 32 are extremely off with a delta e above 30. The color spots at position 85 and 34 follow with a delta e of about 10.
+
+```{r image code}
 deltae -> CIE76
 means_colors <- apply(CIE76[,3:66],2,mean)
 
@@ -230,12 +256,16 @@ for (i in c(1:64)) {
   else if (colorMean > 33) # # clearly distinct
     means_colors_sorted[i] = 6
 }
-means_colors_sorted
-
+#means_colors_sorted
 mean_matrix <- matrix(-means_colors_sorted, nrow = 8, ncol= 8, byrow = TRUE, dimnames = NULL)
+
 ```
 
-Depicted in a 8x8 heatmap that contains all 64 color spots, one can now see which color spots differ the most between master and lab results.
+```{r heatmap, include=FALSE}
+# heatmap with col = heatmap()
+mean_heatmap <- heatmap(mean_matrix, Rowv=NA, Colv=NA, col = heat.colors(5, alpha=1), 
+                       scale="column", margins=c(5,10))
+```
 
 ```{r image plot}
 image(t(mean_matrix),axes=FALSE,col = heat.colors(5))
@@ -244,13 +274,67 @@ axis(side=1, at=seq(from=0,to=1,length.out=8),labels=c(1:8), cex = 0.5)
 
 ```
 
-## CIE94
+### 2.4 JND: Applied to "Target Card"
+
+42 DCC are printed on each sheet with 7 rows and 6 columns of cards as seen in the picture below. 
+A QR code on each DCC identifies its position on the large sheet (row numbers from 1 to 7, column numbers from 1 to 6), which is also called a target.
+
+![](Images/douglas_target_cards.png)
+
+The objective is to compare the 13 target cards that are in a certain position on the printing sheet, and see how they behave in relation to the master card. Then we filter the delta e with the JND scale and count how many color spots are similar to the master and how many are very different from the master card. The results are found in the barplots below. 
+
+```{r comparison per sheet position code, echo= FALSE}
+# create a new matrix where we sum each 13 cards according to it position in the sheet
+card_positions <- matrix(NA, nrow = 42, ncol=64, 
+                         byrow = FALSE, dimnames = NULL)
+k <- 1
+x <- CIE76[,-c(1:2)]
+for (i in 1:42) {
+  card_positions[i,] = apply(x[c(k:(k+12)),],2,mean)
+  #print(i)
+  k = k+13
+}
+```
+The colors are the same as those used in the previous heatmap, according to its delta e, color spots are assigned to a categorical variable such as: "Clearly distinct", "Distinguishable", "Noticable difference on a keen eye", "Barely noticable", "Unnoticable to the human eye" . look at the color coding below.
+```{r labels plot}
+plot.new()
+legend("center", title="Color Scale", col= par("col"),
+       legend = c( "Clearly distinct","Distinguishable", "Noticable difference on a keen eye",
+                   "Barely noticable", "Unnoticable to the human eye"),
+       fill = heat.colors(5,alpha=1) )
+```
+
+```{r comparison per sheet position plot}
+
+#par("mar")
+par(mar=c(1,1,1,1))
+par(mfrow=c(7,6))
+mean_cards <- {}
+for (i in c(1:42)) {
+  colorMean <- card_positions[i,]
+  for (j in c(1:64)) {
+    if (colorMean[j] < 1) # Unnoticable to the human eye
+      mean_cards[j] = 1 
+    else if (colorMean[j] > 1 && colorMean[j] < 2) # barely noticable
+      mean_cards[j] = 2
+    else if (colorMean[j] > 2 && colorMean[j] < 4) # noticable difference on a keen eye
+      mean_cards[j] = 3
+    else if (colorMean[j] > 4 && colorMean[j] < 10) # # distinguishable
+      mean_cards[j] = 4
+    else if (colorMean[j] > 10) # # clearly distinct
+    mean_cards[j] = 5
+  }
+  barplot(table(mean_cards), col = c("#FFFF80FF", "#FFFF00FF", "#FFAA00FF", "#FF5500FF", "#FF0000FF"),main="", names.arg="")
+}
+```
+
+### 2.5 CIE94
 
 The CIE94 deltaE was used in order to obtain a more advanced mesasurement on the differences among colors. CIE94 was introduced in 1994 as an extension to the formerly established CIE76. It's basic structure is similar to CIE76 in that it uses the Euclidean Distance, though it includes additional weighting factors to account for application specific differences in perception. According to Wikipedia: "[CIE94] addresses perceptual non-uniformities, while retaining the L*a*b* color space, by the introduction of application-specific weights derived from an automotive paint test's tolerance data."
 
 $$ ({L_{1}^{*}},{a_{1}^{*}},{b_{1}^{*}})$$ and  
 $$({L_{2}^{*}},{a_{2}^{*}},{b_{2}^{*}}),$$ 
-two colors in L*a*b*:
+two colors in L-a-b:
 
 $$
 \Delta E_{94}^{*}={\sqrt {(\frac{\Delta L^{*}}{k_{L}S_{L}})^{2}+(\frac{\Delta C_{ab}^{*}}{k_{C}S_{C}})^{2}+(\frac{\Delta H_{ab}^{*}}{k_{H}S_{H}})^{2}}}
@@ -348,7 +432,7 @@ CIE94 <- lab.distances
 
 ```
 
-## Comparing CIE76 vs CIE94
+### 2.6 Comparing CIE76 vs CIE94
 
 The histogram of the distances for each color shows some outliers, though the majority of color dots is very close to the master color data. The histogram looks similar to the CIE76 plot, though one can observe that the histogram is shifted slightly to the right, indicating that the CIE76 differences might measure larger differences than the CIE94 method. 
 
@@ -411,7 +495,7 @@ Finally, CIE94 provides a more accurate estimation of the perceived color differ
 t.test(CIE94.means,CIE76.means)
 ```
 
-## Master Pixels against the Largest Distance Pixels
+### 2.7 Master Pixels against the Largest Distance Pixels
 
 In order to "see" the scope of differences among the pixels in the color cards, we identify the pixels of each of the 546 cards with the largest difference to the respective pixel in the master card. We then reproduce a "card of maximum distances" and compare it against the original master card. The colors have been transformed from Lab values to their respective hexadecimal values to plot them in R.
 ```{r fig.height = 5, fig.width = 8, fig.align = "center"}
@@ -491,78 +575,13 @@ mastercardDisplay <- function(){
 }
 par(mfrow=c(1,2))
 colorcardDisplay(allMax)
- 
-
-# JND: Aplied to "Target Card"
-
-42 color cards are printed on each sheet with 7 rows and 6 columns of cards, see picture below. a QR code on the color card 
-identifies its position on the large sheet (row numbers from 1 to 7, column numbers from 1 to 6), 
-which is also called “target”
-
-![](Images/douglas_target_cards.png)
-
-The objective is to compare the 13 target cards that are in a certain position on the sheet of paper, and see how they behave in relation to the master card.  Then we filter the deltaE with the JND scale and count how many color spots are similar to the master and how many are very different from the master card. The results are found in the barplots below. 
-
-```{r comparison per sheet position code, echo= FALSE}
-# create a new matrix where we sum each 13 cards according to it position in the sheet
-
-card_positions <- matrix(NA, nrow = 42, ncol=64, 
-                         byrow = FALSE, dimnames = NULL)
-
-k <- 1
-x <- CIE76[,-c(1:2)]
-for (i in 1:42) {
-  card_positions[i,] = apply(x[c(k:(k+12)),],2,mean)
-  print(i)
-  k = k+13
-}
-
-```
-The colors are the same as those used in the previous heatmap, according to its deltaE, spot colors are assigned to a categorical variable such as: "Clearly distinct", "Distinguishable", "Noticable difference on a keen eye", "Barely noticable", "Unnoticable to the human eye" . look at the color coding below.
-
-```{r labels plot, echo=FALSE}
-plot.new()
-legend("center", title="Color Scale", col= par("col"),
-       legend = c( "Clearly distinct","Distinguishable", "Noticable difference on a keen eye",
-                   "Barely noticable", "Unnoticable to the human eye"),
-       fill = heat.colors(5,alpha=1) )
-```
-
-```{r comparison per sheet position plot, echo = FALSE}
-
-par("mar")
-par(mar=c(1,1,1,1))
-par(mfrow=c(7,6))
-mean_cards <- {}
-for (i in c(1:42)) {
-  colorMean <- card_positions[i,]
-  for (j in c(1:64)) {
-    if (colorMean[j] < 1) # Unnoticable to the human eye
-      mean_cards[j] = 1 
-    else if (colorMean[j] > 1 && colorMean[j] < 2) # barely noticable
-      mean_cards[j] = 2
-    else if (colorMean[j] > 2 && colorMean[j] < 4) # noticable difference on a keen eye
-      mean_cards[j] = 3
-    else if (colorMean[j] > 4 && colorMean[j] < 10) # # distinguishable
-      mean_cards[j] = 4
-    else if (colorMean[j] > 10) # # clearly distinct
-    mean_cards[j] = 5
-  }
-  barplot(table(mean_cards), col = c("#FFFF80FF", "#FFFF00FF", "#FFAA00FF", "#FF5500FF", "#FF0000FF"),main="", names.arg="")
-}
-
-```
-
-
-
-
-
-
-
 mastercardDisplay()
 ```
 
+<a href="#top">Back to top</a>
 
-## Conclusion
+## 3 Conclusion
 
 Something like:  Whether or not the printer quality is bad depends on the sensitivitiy of the app-algorithm. If a Lab distance of >30 can be tolerated, then the printing quality is fine, otherwise, this would lead to errors when using the app.
+
+<a href="#top">Back to top</a>
