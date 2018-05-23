@@ -501,6 +501,7 @@ which is also called “target”
 
 ![](Images/douglas_target_cards.png)
 
+The objective is to compare the 13 target cards that are in a certain position on the sheet of paper, and see how they behave in relation to the master card.  Then we filter the deltaE with the JND scale and count how many color spots are similar to the master and how many are very different from the master card. The results are found in the barplots below. 
 
 ```{r comparison per sheet position code, echo= FALSE}
 # create a new matrix where we sum each 13 cards according to it position in the sheet
@@ -515,9 +516,10 @@ for (i in 1:42) {
   print(i)
   k = k+13
 }
-dim(card_positions)
 
 ```
+The colors are the same as those used in the previous heatmap, according to its deltaE, spot colors are assigned to a categorical variable such as: "Clearly distinct", "Distinguishable", "Noticable difference on a keen eye", "Barely noticable", "Unnoticable to the human eye" . look at the color coding below.
+
 ```{r labels plot, echo=FALSE}
 plot.new()
 legend("center", title="Color Scale", col= par("col"),
@@ -527,7 +529,7 @@ legend("center", title="Color Scale", col= par("col"),
 ```
 
 ```{r comparison per sheet position plot, echo = FALSE}
-#graphics.off()
+
 par("mar")
 par(mar=c(1,1,1,1))
 par(mfrow=c(7,6))
