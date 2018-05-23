@@ -491,6 +491,72 @@ mastercardDisplay <- function(){
 }
 par(mfrow=c(1,2))
 colorcardDisplay(allMax)
+ 
+
+# JND: Aplied to "Target Card"
+
+42 color cards are printed on each sheet with 7 rows and 6 columns of cards, see picture below. a QR code on the color card 
+identifies its position on the large sheet (row numbers from 1 to 7, column numbers from 1 to 6), 
+which is also called “target”
+
+![](Images/douglas_target_cards.png)
+
+
+```{r comparison per sheet position code, echo= FALSE}
+# create a new matrix where we sum each 13 cards according to it position in the sheet
+
+card_positions <- matrix(NA, nrow = 42, ncol=64, 
+                         byrow = FALSE, dimnames = NULL)
+
+k <- 1
+x <- CIE76[,-c(1:2)]
+for (i in 1:42) {
+  card_positions[i,] = apply(x[c(k:(k+12)),],2,mean)
+  print(i)
+  k = k+13
+}
+dim(card_positions)
+
+```
+```{r labels plot, echo=FALSE}
+plot.new()
+legend("center", title="Color Scale", col= par("col"),
+       legend = c( "Clearly distinct","Distinguishable", "Noticable difference on a keen eye",
+                   "Barely noticable", "Unnoticable to the human eye"),
+       fill = heat.colors(5,alpha=1) )
+```
+
+```{r comparison per sheet position plot, echo = FALSE}
+#graphics.off()
+par("mar")
+par(mar=c(1,1,1,1))
+par(mfrow=c(7,6))
+mean_cards <- {}
+for (i in c(1:42)) {
+  colorMean <- card_positions[i,]
+  for (j in c(1:64)) {
+    if (colorMean[j] < 1) # Unnoticable to the human eye
+      mean_cards[j] = 1 
+    else if (colorMean[j] > 1 && colorMean[j] < 2) # barely noticable
+      mean_cards[j] = 2
+    else if (colorMean[j] > 2 && colorMean[j] < 4) # noticable difference on a keen eye
+      mean_cards[j] = 3
+    else if (colorMean[j] > 4 && colorMean[j] < 10) # # distinguishable
+      mean_cards[j] = 4
+    else if (colorMean[j] > 10) # # clearly distinct
+    mean_cards[j] = 5
+  }
+  barplot(table(mean_cards), col = c("#FFFF80FF", "#FFFF00FF", "#FFAA00FF", "#FF5500FF", "#FF0000FF"),main="", names.arg="")
+}
+
+```
+
+
+
+
+
+
+
 mastercardDisplay()
 ```
 
