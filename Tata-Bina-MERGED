@@ -210,31 +210,38 @@ hist(deltae, #breaks = 20,
 The results data concerning CIE76 euclidean distance is still distinguishable to the human eye under controlled viewing conditions. The $$\Delta E_{ab}^{*}\approx 2.3$$ corresponds to the just noticeable difference (JND). The metric here varies between 0.05 units and 36.44 units.
 One can see from the histogram above that most eucledian distances are below the JND. A few euclidean distances even reach above 30 which means that the colors differ a lot between the master CDD color spot and the mean of the respective lab result color spots. 
 
-```{r heatmap code}
-CIE76 <- deltae
-colorMean <- apply(CIE76[,3:66],2,mean)
-colors_jnd <- {}
-for (i in c(1:64)) {
-  x <- colorMean[i] 
-  if (x < 1)                # Unnoticable to the human eye
-    colors_jnd[i] = 1
-  else if (1 < x && x < 2)  # barely noticable
-    colors_jnd[i] = 2
-  else if (2 < x && x < 4)  # noticable difference on a keen eye
-    colors_jnd[i] = 3
-  else if (4 < x )          # clearly distinct
-    colors_jnd[i] = 4
-}
+```{r image code, echo = FALSE}
+deltae -> CIE76
+means_colors <- apply(CIE76[,3:66],2,mean)
 
-mean_matrix <- matrix(colors_jnd, nrow = 8, ncol= 8, byrow = TRUE, dimnames = NULL)
+means_colors_sorted <- {}
+for (i in c(1:64)) {
+  colorMean <- means_colors[i] 
+  if (colorMean < 1) # Unnoticable to the human eye
+    means_colors_sorted[i] = 1 
+  else if (colorMean > 1 && colorMean < 2) # barely noticable
+    means_colors_sorted[i] = 2
+  else if (colorMean > 2 && colorMean < 4) # noticable difference on a keen eye
+    means_colors_sorted[i] = 3
+  else if (colorMean > 4 && colorMean < 10) # # distinguishable
+    means_colors_sorted[i] = 4
+  else if (colorMean > 10) # # clearly distinct
+    means_colors_sorted[i] = 5
+  else if (colorMean > 33) # # clearly distinct
+    means_colors_sorted[i] = 6
+}
+means_colors_sorted
+
+mean_matrix <- matrix(-means_colors_sorted, nrow = 8, ncol= 8, byrow = TRUE, dimnames = NULL)
 ```
 
 Depicted in a 8x8 heatmap that contains all 64 color spots, one can now see which color spots differ the most between master and lab results.
 
-```{r heatmap}
-# heatmap with col = heatmap()
-mean_heatmap <- heatmap(mean_matrix, Rowv=NA, Colv=NA, col = heat.colors(4, alpha=1), 
-                       scale="column", margins=c(5,10))
+```{r image plot}
+image(t(mean_matrix),axes=FALSE,col = heat.colors(5))
+axis(side=2, at=seq(from=0,to=1,length.out=8),labels=c(1:8), cex = 0.5)
+axis(side=1, at=seq(from=0,to=1,length.out=8),labels=c(1:8), cex = 0.5)
+
 ```
 
 ## CIE94
