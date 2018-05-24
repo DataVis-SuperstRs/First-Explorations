@@ -277,7 +277,7 @@ axis(side=2, at=seq(from=0,to=1,length.out=8),labels=c(1:8), cex = 0.5)
 axis(side=1, at=seq(from=0,to=1,length.out=8),labels=c(1:8), cex = 0.5)
 
 ```
-this heatmap shows us with an intense red color the pixels (average of the deltaE pixel in the 546 cards) that are clearly different to the master card. only two pixels are. the other pixels are considered slightly different or not different from the master card. this is a good indication that the printing of the cards does not alter the printed colors significantly.
+This heatmap shows us with an intense red color the pixels (average of the deltaE pixel in the 546 cards) that are clearly different to the master card. Only two pixels are. The other pixels are considered slightly different or not different from the master card. This is a good indication that the printing of the cards does not alter the printed colors significantly.
 
 ### 2.4 JND: Applied to "Target Card"
 
@@ -502,8 +502,8 @@ t.test(CIE94.means,CIE76.means)
 
 ### 2.7 Master Pixels against the Largest Distance Pixels
 
-In order to "see" the scope of differences among the pixels in the color cards, we identify the pixels of each of the 546 cards with the largest difference to the respective pixel in the master card. We then reproduce a "card of maximum distances" and compare it against the original master card. The colors have been transformed from Lab values to their respective hexadecimal values to plot them in R.
-```{r fig.height = 5, fig.width = 8, fig.align = "center"}
+In order to "see" the scope of differences among the pixels in the color cards, we identify the pixels of each of the 64 colors of the 546 cards with the largest difference to the respective pixel in the master card. First, we visually show the distances between each pixel pair with a 3D scatterplot, depicting the Lab values of the master color card and the card with largest distance pixels. 
+```{r}
 # attach sheet numbers to distance deltae data frame
 sheet.number <- {}
 k <- 1
@@ -545,6 +545,27 @@ for (i in 4:67) {
 
 # function to display a color card. Expects a distance matrix of 64:2, 
 # with rowvalue being the row value of CIE94 and column value being the column value of CIE94 (as in 3~13,64~88)
+Lab.vector <- matrix(NA,nrow=64,ncol=3)
+max.card <- function(pixels){
+  pixel.numbers <- matrix(NA, nrow=64, ncol=1, byrow=TRUE)
+  for (i in 1:64){
+    pixel.numbers[i,1] <- colnames(CIE94[pixels[i, 2]+3])
+  }
+  pixels <- cbind(pixels, pixel.numbers)
+  for (i in 1:64){
+    col1 <- paste(c("L", pixels[i,4]), collapse = "")
+    col2 <- paste(c("a", pixels[i,4]), collapse = "")
+    col3 <- paste(c("b", pixels[i,4]), collapse = "")
+    Lab <- c(lab.measure[pixels[i,1],col1],
+             lab.measure[pixels[i,1],col2],
+             lab.measure[pixels[i,1],col3])
+    Lab.vector[i,1] <- Lab[1]
+    Lab.vector[i,2] <- Lab[2]
+    Lab.vector[i,3] <- Lab[3]
+  }
+  return(Lab.vector)
+}
+
 colorcardDisplay <- function(pixels){
   pixel.numbers <- matrix(NA, nrow=64, ncol=1, byrow=TRUE)
   for (i in 1:64){
@@ -557,7 +578,9 @@ colorcardDisplay <- function(pixels){
     col1 <- paste(c("L", pixels[i,4]), collapse = "")
     col2 <- paste(c("a", pixels[i,4]), collapse = "")
     col3 <- paste(c("b", pixels[i,4]), collapse = "")
-    Lab <- c(lab.measure[pixels[i,1],col1], lab.measure[pixels[i,1],col2], lab.measure[pixels[i,1],col3])
+    Lab <- c(lab.measure[pixels[i,1],col1],
+             lab.measure[pixels[i,1],col2],
+             lab.measure[pixels[i,1],col3])
     lab.hex <- hex(LAB(Lab[1],Lab[2],Lab[3]), fixup = T)
     pixel.hex[i,1] <- pixels[i,3]
     pixel.hex[i,2] <- lab.hex
@@ -567,6 +590,40 @@ colorcardDisplay <- function(pixels){
   axis(side=2, at=seq(from=0,to=1,length.out=8),labels=c(1:8))
 }
 
+# function to create scatterplot3ds comparing master colors against 1 lab card
+Lab.spl <- function(master, lab) {
+  spl <- scatterplot3d(master, 
+                       main="Master Color Card - Lab values",
+                       #color = hex(solarLAB(master[,1],master[,2],master[,3]), fixup = TRUE),
+                       color = "red",
+                       pch = 16, 
+                       type = "h",
+                       grid=TRUE,
+                       box=FALSE)
+  spl$points3d(lab,
+               #col = hex(solarLAB(lab[,1],lab[,2],lab[,3]), fixup = TRUE),
+               col = "blue",
+               pch = 15,
+               type = "h")
+  legend(spl$xyz.convert(20, 10, 70), 
+         col= c("red","blue"), 
+         bg="white", 
+         lty=c(1,1), lwd=2, yjust=0, 
+         legend = c("Master","Lab"), cex = 1.1)
+  text(spl$xyz.convert(master), 
+       labels = rownames(master),
+       cex= 0.7, 
+       #col = hex(solarizedLAB, fixup = TRUE),
+       pos = 3) 
+  segments(spl$xyz.convert(master)$x,spl$xyz.convert(master)$y,
+           spl$xyz.convert(lab)$x,spl$xyz.convert(lab)$y,
+           lwd=2,col=1)
+}
+
+Lab.spl(master.color[,9:11],max.card(allMax))
+```
+We then reproduce a "card of maximum distances" and compare it against the original master card. The colors have been transformed from Lab values to their respective hexadecimal values to plot them in R. We can clearly see in the graph below, that pixel 32 (row=3, colum=2) is very different from the intended color. The other major distinguishable difference as indicated by the heatmap can be found at pixel 85, the violet spot at the top center. 
+```{r fig.height = 5, fig.width = 8, fig.align = "center"}
 # function to display the master color card. No inputs expected
 mastercardDisplay <- function(){
   master.hex <- matrix(NA,nrow=64,ncol = 1,byrow=T)
