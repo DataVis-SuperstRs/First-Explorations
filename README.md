@@ -16,3 +16,8 @@ It seems that the app can calibrate the color cards according to their original 
 
 An additional analysis for the future would be to check whether the differences observed using deltaE and the JND scale are statistically significant and thus determine whether the printed color chart is in fact different from the master chart. 
 
+### for the box plots
+In the box plot we can deduce two things, the first is that most of the deltaE values per pixel are uniformly distributed, we see this in the box plots that have a symmetrical shape, meaning that the data are equally distributed on the mean, and we also find only a few outliers. 
+
+Another interesting point is to look at the y-axis, the deltaE values where the box plots are located, here we see that most of them are near a delta E 2. This delta E is the JND measure we use to define if one color is different from another in this analysis and as the majority of deltaE pixels are close to this value, it is a good indicator of the print quality of each pixel. It is important to recall that this delta E shown on the box plot is the average delta E of that pixel on all 546 cards. 
+
