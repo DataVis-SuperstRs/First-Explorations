@@ -21,3 +21,7 @@ In the box plot we can deduce two things, the first is that most of the deltaE v
 
 Another interesting point is to look at the y-axis, the deltaE values where the box plots are located, here we see that most of them are near a delta E 2. This delta E is the JND measure we use to define if one color is different from another in this analysis and as the majority of deltaE pixels are close to this value, it is a good indicator of the print quality of each pixel. It is important to recall that this delta E shown on the box plot is the average delta E of that pixel on all 546 cards. 
 
+### heatmap acctually image
+this heatmap shows us with an intense red color the pixels (average of the deltaE pixel in the 546 cards) that are clearly different to the master card. only two pixels are. the other pixels are considered slightly different or not different from the master card. this is a good indication that the printing of the cards does not alter the printed colors significantly. 
+
+
