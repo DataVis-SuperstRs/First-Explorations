@@ -332,6 +332,34 @@ for (i in c(1:42)) {
   barplot(table(mean_cards), col = c("#FFFF80FF", "#FFFF00FF", "#FFAA00FF", "#FF5500FF", "#FF0000FF"),main="", names.arg="")
 }
 ```
+The barplots show us the relationship between the categorical variables of the deltaE ("Clearly distinct", "Distinguishable"...) and the number of times they appear on the color card. is a good way to see the frequency that these variables appear in each card located on the sheet of paper, but it does not give us more details about which pixel exactly belongs to which category, so it is more advisable to use multiple heatmaps to visualize the categorical variables of the color cards. 
+
+```{r multiple heatmaps}
+par(mar=c(1,1,1,1))
+par(mfrow=c(7,6))
+mean_cards <- {}
+for (i in c(1:42)) {
+  colorMean <- card_positions[i,]
+  for (j in c(1:64)) {
+    if (colorMean[j] < 1) # Unnoticable to the human eye
+      mean_cards[j] = 1 
+    else if (colorMean[j] > 1 && colorMean[j] < 2) # barely noticable
+      mean_cards[j] = 2
+    else if (colorMean[j] > 2 && colorMean[j] < 4) # noticable difference on a keen eye
+      mean_cards[j] = 3
+    else if (colorMean[j] > 4 && colorMean[j] < 10) # # distinguishable
+      mean_cards[j] = 4
+    else if (colorMean[j] > 10) # # clearly distinct
+      mean_cards[j] = 5
+  }
+  mean_matrix2 <- matrix(-mean_cards, nrow = 8, ncol= 8, byrow = TRUE, dimnames = NULL)
+  image(t(mean_matrix2),axes=FALSE,col = heat.colors(5,alpha=1))
+}
+```
+In each color card the pixels are organized just like the Douglas master card. The pixel (1,1) is the pixel located in the bottom left corner and so on. 
+
+Now you can compare more closely the different color cards and their different positions on the sheet of paper. Something very interesting is that the pixel at the position (2,3) in all heatmaps appears in intense red, being a constant indicating that this color has always been badly printed and the desired color is not obtained. Another general observation is that the pixels in the center that correspond to the skin-colored pixels are generally light yellow coloured and do not have much variation being thus closer to the master card. 
+
 
 ### 2.5 CIE94
 
